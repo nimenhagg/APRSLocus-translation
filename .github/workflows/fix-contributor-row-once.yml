@@ -1,44 +1,10 @@
 name: fix contributor row once
 
 on:
-  push:
-    branches:
-      - bot/i18n-sync-a729450
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 jobs:
-  update:
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout maintained branch
-        uses: actions/checkout@v4
-        with:
-          ref: i18n/complete-english
-          fetch-depth: 0
-
-      - name: Match tester row style
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('lib/about_page.dart')
-          s = p.read_text()
-          old = '''                          _linkRow(\n                            icon: Icons.translate_rounded,\n                            label: S.of(context).codeContributionI18n,\n                            value: 'BD3QID',\n                            url: 'https://github.com/nimenhagg/APRSLocus-translation',\n                          ),\n'''
-          new = '''                          _eggRow(\n                            S.of(context).codeContributionI18n,\n                            'BD3QID',\n                          ),\n'''
-          if old not in s:
-              raise SystemExit('contributor link row not found')
-          p.write_text(s.replace(old, new, 1))
-          PY
-          git diff --check
-
-      - name: Commit and push
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name nimenhagg
-          git config user.email 119995761+nimenhagg@users.noreply.github.com
-          git add lib/about_page.dart
-          git commit -m 'fix: show contributor callsign without external link'
-          git push origin HEAD:i18n/complete-english
+      - run: echo done
