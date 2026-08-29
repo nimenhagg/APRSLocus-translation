@@ -1,0 +1,48 @@
+name: rename contributor credit once
+
+on:
+  push:
+    branches:
+      - bot/i18n-sync-a729450
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout maintained branch
+        uses: actions/checkout@v4
+        with:
+          ref: i18n/complete-english
+          fetch-depth: 0
+
+      - name: Rename contributor display
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/about_page.dart')
+          s = p.read_text()
+          old = "value: 'nimenhagg',"
+          new = "value: 'BD3QID',"
+          if s.count(old) != 1:
+              raise SystemExit(f'expected exactly one match, got {s.count(old)}')
+          p.write_text(s.replace(old, new, 1))
+          PY
+          dart format lib/about_page.dart || true
+          git diff --check
+          test "$(git diff --name-only | wc -l)" -eq 1
+          test "$(git diff --name-only)" = "lib/about_page.dart"
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name nimenhagg
+          git config user.email 119995761+nimenhagg@users.noreply.github.com
+          git add lib/about_page.dart
+          git commit -m 'docs: use callsign for contributor credit'
+          git push origin HEAD:i18n/complete-english
